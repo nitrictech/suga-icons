@@ -1,11 +1,14 @@
+import { readdirSync } from "node:fs";
 import svgpath from "svgpath";
 import { describe, expect, test } from "vitest";
-import { readIcons, type Shape } from "../scripts/read-icons";
+import { ICONS_DIR, readIcons, type Shape, SIZES } from "../scripts/read-icons";
+import type { IconSize } from "../src/render-icon";
 
-// Stroke centres must stay inside this box. A 1px stroke centred on 1.5
-// fills pixel 1, so the icon covers pixels 1 to 13 with 7 as its centre.
-const MIN = 1.5;
-const MAX = 13.5;
+// Stroke centres must stay inside 1.5 to size - 2.5. A 1px stroke centred on
+// 1.5 fills pixel 1, so a 16px icon covers pixels 1 to 13 with 7 as its
+// centre. 12px and 20px icons keep the same margins: pixels 1 to 9 around 5,
+// and 1 to 17 around 9.
+const bounds = (size: IconSize) => ({ min: 1.5, max: size - 2.5 });
 
 const onHalfPixel = (value: number) =>
   Math.abs((((value % 1) + 1) % 1) - 0.5) < 1e-6;
@@ -35,14 +38,15 @@ function pathSegments(d: string): Segment[] {
   return segments;
 }
 
-function problems(shape: Shape): string[] {
+function problems(shape: Shape, size: IconSize): string[] {
   const found: string[] = [];
+  const { min, max } = bounds(size);
   const n = (key: string) => Number(shape.attributes[key]);
   const checkInside = (label: string, ...values: number[]) => {
     if (!isStroked(shape)) return;
     for (const value of values) {
-      if (value < MIN - 1e-6 || value > MAX + 1e-6) {
-        found.push(`${label} reaches ${value}, outside ${MIN} to ${MAX}`);
+      if (value < min - 1e-6 || value > max + 1e-6) {
+        found.push(`${label} reaches ${value}, outside ${min} to ${max}`);
       }
     }
   };
@@ -84,12 +88,32 @@ function problems(shape: Shape): string[] {
   return found;
 }
 
-describe.each(readIcons())("$file", (icon) => {
+const icons = readIcons();
+
+describe.each(icons)("$path", (icon) => {
   test("file name is kebab case", () => {
     expect(icon.file).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
   });
 
   test("strokes sit on the pixel grid", () => {
-    expect(icon.shapes.flatMap(problems)).toEqual([]);
+    expect(icon.shapes.flatMap((shape) => problems(shape, icon.size))).toEqual(
+      [],
+    );
   });
 });
+
+test("every folder in icons/ is a size that gets read", () => {
+  const folders = readdirSync(ICONS_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => Number(entry.name));
+  expect(folders.sort()).toEqual(SIZES.filter((size) => size !== 16));
+});
+
+test.each(icons.filter((icon) => icon.size !== 16))(
+  "$path has a 16px version",
+  (icon) => {
+    expect(
+      icons.some((other) => other.size === 16 && other.file === icon.file),
+    ).toBe(true);
+  },
+);

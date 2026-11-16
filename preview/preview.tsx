@@ -11,7 +11,7 @@ function Gallery() {
   );
   return (
     <>
-      <p>{`${icons.length} icons, each at 16px (its real size) and 32px.`}</p>
+      <p>{`${icons.length} icons, each at the size it's drawn for and twice that.`}</p>
       <input
         type="search"
         placeholder="Find an icon"
@@ -20,11 +20,11 @@ function Gallery() {
         onChange={(event) => setQuery(event.target.value)}
       />
       <main>
-        {shown.map(([name, Icon]) => (
+        {shown.map(([name, { Icon, size }]) => (
           <figure key={name}>
             <div className="sizes">
               <Icon />
-              <Icon className="large" />
+              <Icon width={size * 2} height={size * 2} />
             </div>
             <figcaption>{name}</figcaption>
           </figure>

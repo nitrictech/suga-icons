@@ -1,11 +1,12 @@
 // Draws a review sheet of icons as Chromium renders them at 1x.
 //
 //   bun run audit                      every icon
-//   bun run audit -- --only bot,send   just these files
+//   bun run audit -- --only bot,send   just these files, at every size
 //
 // Writes audit/sheet.png: each icon at 1x, at 2x, and its 1x pixels zoomed
-// 8 times, so blur and stray pixels are easy to spot. `bun run sharpness`
-// does the measuring; this is for looking.
+// 8 times, so blur and stray pixels are easy to spot. An icon's 12px and 20px
+// versions sit beside its 16px one. `bun run sharpness` does the measuring;
+// this is for looking.
 import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { chromium } from "playwright";
@@ -18,7 +19,8 @@ const icons = readIcons().filter((icon) => !only || only.includes(icon.file));
 
 const entries = icons.map((icon) => ({
   name: icon.name,
-  svg: readFileSync(join(ICONS_DIR, `${icon.file}.svg`), "utf8"),
+  size: icon.size,
+  svg: readFileSync(join(ICONS_DIR, `${icon.path}.svg`), "utf8"),
 }));
 
 const page = `<!doctype html>
@@ -27,8 +29,7 @@ const page = `<!doctype html>
   main { display: grid; grid-template-columns: repeat(6, max-content); gap: 16px 32px; }
   figure { margin: 0; display: grid; grid-template-columns: repeat(3, max-content); gap: 8px; align-items: center; }
   figcaption { grid-column: 1 / -1; font-weight: 600; }
-  canvas.zoom { width: 128px; height: 128px; image-rendering: pixelated; outline: 1px solid #ddd; }
-  .x2 { width: 32px; height: 32px; }
+  canvas.zoom { image-rendering: pixelated; outline: 1px solid #ddd; }
 </style>
 <main></main>
 <script>
@@ -38,10 +39,10 @@ const page = `<!doctype html>
     image.onload = () => resolve(image);
     image.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   });
-  const raster = (image) => {
+  const raster = (image, size) => {
     const canvas = document.createElement("canvas");
-    canvas.width = canvas.height = 16;
-    canvas.getContext("2d").drawImage(image, 0, 0, 16, 16);
+    canvas.width = canvas.height = size;
+    canvas.getContext("2d").drawImage(image, 0, 0, size, size);
     return canvas;
   };
   window.drawn = (async () => {
@@ -51,10 +52,11 @@ const page = `<!doctype html>
       caption.textContent = entry.name;
       const image = await load(entry.svg);
       const twoX = image.cloneNode();
-      twoX.className = "x2";
-      const zoomed = raster(image);
+      twoX.style.width = twoX.style.height = entry.size * 2 + "px";
+      const zoomed = raster(image, entry.size);
       zoomed.className = "zoom";
-      figure.append(caption, raster(image), twoX, zoomed);
+      zoomed.style.width = zoomed.style.height = entry.size * 8 + "px";
+      figure.append(caption, raster(image, entry.size), twoX, zoomed);
       document.querySelector("main").append(figure);
     }
   })();

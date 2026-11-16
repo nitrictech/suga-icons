@@ -15,9 +15,12 @@ test("the package exports every icon", () => {
 });
 
 describe.each(icons)("$name", (icon) => {
-  test("renders a 16px icon with every shape", () => {
-    const markup = renderToStaticMarkup(createElement(catalog[icon.name]));
-    expect(markup).toContain('viewBox="0 0 16 16"');
+  test("renders at its own size with every shape", () => {
+    const markup = renderToStaticMarkup(createElement(catalog[icon.name].Icon));
+    const { size } = icon;
+    expect(markup).toContain(
+      `width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"`,
+    );
     expect(markup).toContain(`data-icon-name="${icon.name}"`);
     expect(
       markup.match(/<(path|rect|circle|ellipse|line|polyline|polygon) /g),
