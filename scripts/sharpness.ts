@@ -1,5 +1,5 @@
-// Renders every icon as inline SVG in Chromium at 1x and 2x and checks that
-// each straight stroke lands on whole pixels.
+// Renders every icon, at every size, as inline SVG in Chromium at 1x and 2x
+// and checks that each straight stroke lands on whole pixels.
 //
 //   bun run sharpness
 //
@@ -62,7 +62,7 @@ function straightStrokes(icon: Icon): Stroke[] {
 
 const icons = readIcons().map((icon) => ({
   name: icon.name,
-  svg: readFileSync(join(ICONS_DIR, `${icon.file}.svg`), "utf8").replace(
+  svg: readFileSync(join(ICONS_DIR, `${icon.path}.svg`), "utf8").replace(
     "<svg ",
     '<svg style="display:block" ',
   ),

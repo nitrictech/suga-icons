@@ -1,7 +1,7 @@
 {
   "name": "@nitric/suga-icons",
   "version": "0.0.0",
-  "description": "Icons drawn on a 16px pixel grid, so they stay sharp at 16px on 1x screens.",
+  "description": "Icons drawn on a 16px pixel grid, so they stay sharp at 16px on 1x screens, with some also drawn for 12px and 20px.",
   "license": "MIT",
   "type": "module",
   "repository": {
@@ -15,7 +15,9 @@
     "react",
     "svg",
     "pixel-grid",
-    "16px"
+    "16px",
+    "12px",
+    "20px"
   ],
   "packageManager": "bun@1.4.2",
   "sideEffects": false,
