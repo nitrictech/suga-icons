@@ -1,6 +1,6 @@
-# Publishing a GitHub release stages that version on npm through trusted
-# publishing (OIDC), so the repo holds no npm token. A maintainer then
-# approves it with `npm stage approve <id>`, which needs their 2FA.
+# Publishing a GitHub release publishes that version to npm through trusted
+# publishing (OIDC), so the repo holds no npm token. The job runs in the `npm`
+# environment, which waits for a required reviewer to approve it in GitHub.
 name: Publish
 
 on:
@@ -27,5 +27,5 @@ jobs:
         run: npm version --no-git-tag-version "${GITHUB_REF_NAME#v}"
       - run: bun run test
       - run: bun run build
-      - name: Stage on npm
-        run: npm stage publish --access public --provenance --tag "${{ github.event.release.prerelease && 'next' || 'latest' }}"
+      - name: Publish to npm
+        run: npm publish --access public --provenance --tag "${{ github.event.release.prerelease && 'next' || 'latest' }}"

@@ -75,13 +75,10 @@ moves them by part of a pixel, strokes stop landing on whole pixels.
 ## Releasing
 
 Publishing a GitHub release named `vX.Y.Z` runs `.github/workflows/publish.yml`,
-which stages that version on npm through trusted publishing; the repo holds no
-npm token. A maintainer then approves it:
-
-```sh
-npm stage list @nitric/suga-icons
-npm stage approve <stage-id>
-```
+which publishes that version to npm through trusted publishing; the repo holds
+no npm token. The job waits in the `npm` environment until a required reviewer
+approves it from the workflow run in GitHub Actions. Mark the release as a
+prerelease to publish under the `next` tag instead of `latest`.
 
 ## License
 
