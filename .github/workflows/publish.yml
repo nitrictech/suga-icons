@@ -1,0 +1,31 @@
+# Publishing a GitHub release stages that version on npm through trusted
+# publishing (OIDC), so the repo holds no npm token. A maintainer then
+# approves it with `npm stage approve <id>`, which needs their 2FA.
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: bun install --frozen-lockfile
+      - name: Set version from the release tag
+        run: npm version --no-git-tag-version "${GITHUB_REF_NAME#v}"
+      - run: bun run test
+      - run: bun run build
+      - name: Stage on npm
+        run: npm stage publish --access public --provenance --tag "${{ github.event.release.prerelease && 'next' || 'latest' }}"

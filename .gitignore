@@ -1,0 +1,7 @@
+node_modules
+dist
+audit
+# Generated from icons/*.svg by scripts/generate.ts
+src/icons
+src/index.ts
+src/catalog.ts
